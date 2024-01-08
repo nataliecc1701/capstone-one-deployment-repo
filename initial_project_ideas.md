@@ -9,4 +9,4 @@ Posts directed to the bot (via the @ feature on the application in question) wou
 
 A database would store the history of each game (who the players are, game status (active, abandoned, draw, or which player won), and each move made in the game on each turn)
 
-If necessary, a site could be coded allow for queries to that database by users.
+If necessary, a site could be coded to show the games history to users via a jinja webpage (instead of e.g. asking a bot, or the database being visible only to me)
