@@ -42,9 +42,8 @@ async def on_message(message):
         else:
             game = get_next_game(message.author.name)
             if game:
-                board = MancalaBoard(id = game.id, moves = game.moves)
-                selected_game[message.author.name] = board
-                await message.channel.send(board)
+                selected_game[message.author.name] = game
+                await message.channel.send(game)
             else:
                 await message.channel.send("There are no games waiting for you to move")
 
@@ -86,14 +85,14 @@ def get_next_game(username):
         chald = session.scalars(challenged_games).one_or_none()
         # probably a way to do this in SQL but I don't want to think about that this time of night
         
-        if chalr:
-            if chald:
-                if chalr.move_time > chald.move_time:
-                    return chalr
-                return chald
-            return chalr
         if chald:
-            return chald
+            if chalr:
+                if chalr.move_time > chald.move_time:
+                    return MancalaBoard(id = chalr.id, moves = chalr.moves)
+                return MancalaBoard(id = chald.id, moves = chald.moves)
+            return MancalaBoard(id = chald.id, moves = chald.moves)
+        if chalr:
+            return MancalaBoard(id = chalr.id, moves = chalr.moves)
         return None
 
 client.run(os.environ['DISCORD_BOT_TOKEN'])
