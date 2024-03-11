@@ -6,12 +6,17 @@ BOARD_HOUSES = 6
 SEEDS_PER_HOUSE = 4
 
 class MancalaBoard:
-    def __init__(self, sides = [], scores = []):
+    def __init__(self, id = None, sides = [], scores = [], moves = []):
+        self.id = id
         self.new_game()
         if sides:
             self.sides = sides
             if scores:
                 self.scores = scores
+        elif moves:
+            # Construct a board from a list of past moves. Only happens if the board state is not given
+            for move in moves:
+                move(move.house, move.player)
         
     def new_game(self, houses = BOARD_HOUSES, seeds = SEEDS_PER_HOUSE):
         self.sides = [self.construct_side(houses,seeds), self.construct_side(houses,seeds)]
@@ -89,7 +94,7 @@ class MancalaBoard:
                 
     
     def __repr__(self):
-        return f"MancalaBoard({self.sides}, {self.score})"
+        return f"MancalaBoard(id={self.id}, sides={self.sides}, scores={self.score})"
     
     def __str__(self):
         '''the emojified string of the board'''

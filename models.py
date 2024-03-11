@@ -36,10 +36,12 @@ class Match(Base):
     # A value of 0 corresponds to Kalah(6,4)
     
     moves: Mapped[List["MancalaMove"]] = relationship(
-        back_populates="game", cascade="all, delete-orphan"
+        back_populates="game", cascade="all, delete-orphan", order_by="MancalaMove.move_number"
     )
     
     status_code: Mapped[int] = mapped_column(Integer(), nullable=False, default=10)
+    
+    move_time: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     
 class MancalaMove(Base):
     '''Contains moves in a game of mancala: which player did it, and which of their houses
@@ -59,3 +61,5 @@ class MancalaMove(Base):
     house: Mapped[int] = (Integer())
     
     timestamp: Mapped[DateTime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    
+    game: Mapped["Match"] = relationship(back_populates="moves")
