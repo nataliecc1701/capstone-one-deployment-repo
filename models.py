@@ -39,6 +39,8 @@ class Match(Base):
         back_populates="game", cascade="all, delete-orphan"
     )
     
+    status_code: Mapped[int] = mapped_column(Integer(), nullable=False, default=10)
+    
 class MancalaMove(Base):
     '''Contains moves in a game of mancala: which player did it, and which of their houses
     did they move'''
