@@ -2,47 +2,58 @@
 
 # python imports
 from datetime import datetime
+from typing import List, Optional
+import os
 
 # SQLAlchemy library import
-from sqlalchemy import SQLAlchemy
+from sqlalchemy import ForeignKey, String, DateTime, Boolean, Integer, create_engine
+from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column, relationship
+from sqlalchemy.sql import func
 
-db = SQLAlchemy()
+create_engine(os.environ["GAMES_BOT_DATABASE"], echo=True)
 
-class Match(db.Model):
+class Base(DeclarativeBase):
+    pass
+
+class Match(Base):
     '''Contains matches: when they were started, what game is being played,
     and which users are involved'''
     
     __tablename__ = 'matches'
     
-    id = db.Column(db.Integer, primary_key=True)
+    id: Mapped[int] = mapped_column(primary_key=True)
     
-    challenger = db.Column(db.Text, nullable = False)
+    challenger: Mapped[str] = mapped_column(String(50))
     # Discord identifier for the challenger
     
-    challenged = db.Column(db.Text, nullable = False)
+    challenged: Mapped[str] = mapped_column(String(50))
     # Discord identifier for the user challenged
     
-    challenge_time = db.Column(db.DateTime, nullable = False, default = datetime.utcnow())
+    challenge_time: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     
-    game = db.Column(db.Integer, nullable = False, default = 0)
+    game: Mapped[int] = mapped_column(Integer(), nullable=False, default = 0)
     # for now, includes an integer value corresponding to the game in question
     # A value of 0 corresponds to Kalah(6,4)
     
-class MancalaMove(db.Model):
+    moves: Mapped[List["MancalaMove"]] = relationship(
+        back_populates="game", cascade="all, delete_orphan"
+    )
+    
+class MancalaMove(Base):
     '''Contains moves in a game of mancala: which player did it, and which of their houses
     did they move'''
     
     __tablename__ = 'mancala_moves'
     
-    id = db.Column(db.Integer, primary_key = True)
+    id: Mapped[int] = mapped_column(primary_key=True)
     
-    match_id = db.Column(db.Integer, db.ForeignKey('matches.id'), nullable=False)
-    move_number = db.Column(db.Integer)
+    match_id: Mapped[int] = mapped_column(ForeignKey('matches.id'), nullable=False)
+    move_number: Mapped[int] = mapped_column(Integer(), nullable=False)
     # Could use these as a composite primary key instead
     
-    player = db.Column(db.Boolean, nullable=False, default=False)
+    player: Mapped[bool] = mapped_column(Boolean(), nullable=False, default=False)
     # TRUE if the move was made by the challenger, FALSE if made by the challenged
     
-    house = db.Column(db.Integer, nullable=False)
+    house: Mapped[int] = (Integer())
     
-    timestamp = db.Column(db.DateTime, nullable=False, default=datetime.utcnow())
+    timestamp: Mapped[DateTime] = mapped_column(DateTime(timezone=True), server_default=func.now())
