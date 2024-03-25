@@ -25,7 +25,6 @@ selected_game = dict() # Store active games in a dictionary
 # selected_game[user_id] will be the game the bot is currently expecting
 # the user indicated by user_id to make a move for
 
-# Bot commands
 @client.event
 async def on_message(message):
     if message.author == client.user:
@@ -46,6 +45,38 @@ async def on_message(message):
                 await message.channel.send(game)
             else:
                 await message.channel.send("There are no games waiting for you to move")
+    elif message.content.startswith("$move"):
+        if message.author.name not in selected_game:
+            return
+        game = selected_game[message.author.name]
+        if message.content.split()[1].isdigit:
+            house = int(message.content.split()[1])
+            err = game.invalidate_move(house-1)
+            if err:
+                await message.channel.send(err)
+            else:
+                with Session(engine) as session:
+                    mv = MancalaMove(match_id = game.id, move_number = len(game.moves), player = game.turn, house = house)
+                    
+                    session.add(mv)
+                    try:
+                        session.commit()
+                    except:
+                        await message.channel.send("error committing move to database")
+                    status = game.move(house)
+                    if status[0] >= 20:
+                        await message.channel.send(status[1])
+                    if status[0] == 11:
+                        await message.channel.send(game)
+                    if status[0] == 10 or status[0] == 12:
+                        await message.channel.send("Move made, awaiting move by opposing player")
+                        await message.channel.send("Next game:")
+                        await message.channel.send(advance_game(message.author.username))
+    elif message.content.startswith("$listgames"):
+        await message.channel.send("Your current games are:")
+    elif message.content.startswith("switchgame"):
+        new_game = None # implement this
+        selected_game[message.author.name] = new_game
 
 
 async def challenge(challenger, challenged, channel):
@@ -81,8 +112,8 @@ def get_next_game(username):
                             .where(Match.status_code.in_([10,12]))
                             .order_by(Match.move_time.desc()))
         
-        chalr = session.scalars(challenger_games).one_or_none()
-        chald = session.scalars(challenged_games).one_or_none()
+        chalr = session.scalars(challenger_games).first()
+        chald = session.scalars(challenged_games).first()
         # probably a way to do this in SQL but I don't want to think about that this time of night
         
         if chald:
@@ -94,5 +125,16 @@ def get_next_game(username):
         if chalr:
             return MancalaBoard(id = chalr.id, moves = chalr.moves)
         return None
+
+def advance_game(username):
+    """Sets the user's selected game to their next game, or none if there are no games awaiting them.
+    Returns a string that can be said as a reply by the bot"""
+    game = get_next_game(username)
+    if game:
+        selected_game[username] = game
+        return str(game)
+    else:
+        return "There are no games waiting for you to move"
+    
 
 client.run(os.environ['DISCORD_BOT_TOKEN'])

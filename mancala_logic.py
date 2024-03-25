@@ -6,8 +6,10 @@ BOARD_HOUSES = 6
 SEEDS_PER_HOUSE = 4
 
 class MancalaBoard:
-    def __init__(self, id = None, sides = [], scores = [], moves = []):
+    def __init__(self, id = None, sides = [], scores = [], moves = [], challenger = "", challenged = ""):
         self.id = id
+        self.challenger = ""
+        self.challenged = ""
         self.new_game()
         if sides:
             self.sides = sides
@@ -33,6 +35,23 @@ class MancalaBoard:
             side.append(seeds)
         return side
     
+    def invalidate_move(self, position, turn = None):
+        """Checks if a move can be made: the position is.
+        Returns False for valid moves, otherwise returns an error string"""
+        
+        if turn == None:
+            turn = self.turn
+            
+        side = 1
+        if turn:
+            side = 0
+        
+        if position >= BOARD_HOUSES:
+            return "House does not exist"
+        if self.sides[side][position] == 0:
+            return "Cannot take from empty house"
+        return False
+    
     def move(self, house, turn = None):
         """Makes a move from the given house. Defaults to being for the player whose turn it is
         
@@ -44,7 +63,6 @@ class MancalaBoard:
         
         Starting with 2: Failed move and error message
         20: Error"""
-        # NOTE: REWORK THIS FUNCTION SO THAT IT RETURNS A STATUS CODE AND MESSAGE TUPLE PROBABLY
         
         # figure out which side of the board we're on
         if turn == None:
@@ -105,10 +123,11 @@ class MancalaBoard:
         scores = [self.score_to_emoji(s) for s in self.scores[::i]]
         sides = self.sides[::i]
         
+        player_line = f"{self.challenger} vs {self.challenged}"
         top_line = f"{scores[0][0]}{sep}{self.side_to_string(sides[0], reverse=True)}{sep}{scores[1][0]}"
         bottom_line = f"{scores[0][1]}{sep}{self.side_to_string(sides[1])}{sep}{scores[1][1]}"
         
-        return f"{top_line}\n{bottom_line}"
+        return f"{player_line}\n{top_line}\n{bottom_line}"
     
     def house_to_emoji(self, num: int):
         emoji_list = ["🔵","1️⃣","2️⃣","3️⃣","4️⃣","5️⃣","6️⃣","7️⃣","8️⃣","9️⃣","🔟"]
