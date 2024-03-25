@@ -171,9 +171,8 @@ async def challenge(challenger, challenged, channel):
     with Session(engine) as session:
         q = (select(Match)
              .filter(or_
-                     ((Match.challenged == challenged.name)&(Match.challenger == challenger.name),
-                      (Match.challenged == challenger.name)&(Match.challenger == challenged.name)))
-             .filter(Match.status_code < 20)
+                     ((Match.challenged == challenged.name)&(Match.challenger == challenger.name)&(Match.status_code in [10, 12]),
+                      (Match.challenged == challenger.name)&(Match.challenger == challenged.name)&(Match.status_code == 11)))
              .order_by(Match.move_time.desc()))
         
         existing = session.scalars(q).first()
