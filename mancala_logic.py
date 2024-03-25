@@ -6,24 +6,29 @@ BOARD_HOUSES = 6
 SEEDS_PER_HOUSE = 4
 
 class MancalaBoard:
-    def __init__(self, id = None, sides = [], scores = [], moves = [], challenger = "", challenged = ""):
+    def __init__(self, id = None, sides = [], scores = [], moves = [], challenger = "", challenged = "", move_count = 0):
         self.id = id
-        self.challenger = ""
-        self.challenged = ""
+        self.challenger = challenger
+        self.challenged = challenged
         self.new_game()
         if sides:
             self.sides = sides
             if scores:
                 self.scores = scores
+            self.move_count = move_count
         elif moves:
             # Construct a board from a list of past moves. Only happens if the board state is not given
             for move in moves:
-                move(move.house, move.player)
+                self.move(int(move.house), move.player)
+            self.move_count = len(moves)
         
     def new_game(self, houses = BOARD_HOUSES, seeds = SEEDS_PER_HOUSE):
         self.sides = [self.construct_side(houses,seeds), self.construct_side(houses,seeds)]
         self.scores = [0,0]
         self.turn = False
+        self.move_count = 0
+        
+        # index of 0 for challenger, 1 for challenged
         
         # doing this with array indices and a bool for turn status is perhaps prematurely
         # optimized. I could do this with dictionaries (keys "challenger", "challenged")
@@ -37,7 +42,7 @@ class MancalaBoard:
     
     def invalidate_move(self, position, turn = None):
         """Checks if a move can be made: the position is.
-        Returns False for valid moves, otherwise returns an error string"""
+        Returns a tuple of status code, error string (error string is empty for valid moves)"""
         
         if turn == None:
             turn = self.turn
@@ -111,8 +116,30 @@ class MancalaBoard:
             return (11, "")
                 
     
+    def is_solitaire(self):
+        return self.challenger == self.challenged
+    
+    def get_opponent(self, turn = None):
+        """gets the current player's opponent. Returns a username string"""
+        if turn == None:
+            turn = self.turn
+        
+        else:
+            if turn:
+                return self.challenged
+            else:
+                return self.challenger
+            
+    def tally_lead(self):
+        """Tallies the scores and all seeds in people's houses to determine who's ahead. Returns 0 for the challenger and 1 for the challenged.
+        If one side of the board is empty, then whoever is ahead now is the winner."""
+        final_scores = (self.scores[0] + sum(self.sides[0]), self.scores[1] + sum(self.sides[1]))
+        if final_scores[0] > final_scores[1]:
+            return 0
+        return 1
+    
     def __repr__(self):
-        return f"MancalaBoard(id={self.id}, sides={self.sides}, scores={self.score})"
+        return f"MancalaBoard(id={self.id}, sides={self.sides}, scores={self.score}, challenger={self.challenger}, challenged={self.challenged}, move_count={self.move_count})"
     
     def __str__(self):
         '''the emojified string of the board'''
@@ -123,11 +150,10 @@ class MancalaBoard:
         scores = [self.score_to_emoji(s) for s in self.scores[::i]]
         sides = self.sides[::i]
         
-        player_line = f"{self.challenger} vs {self.challenged}"
         top_line = f"{scores[0][0]}{sep}{self.side_to_string(sides[0], reverse=True)}{sep}{scores[1][0]}"
         bottom_line = f"{scores[0][1]}{sep}{self.side_to_string(sides[1])}{sep}{scores[1][1]}"
         
-        return f"{player_line}\n{top_line}\n{bottom_line}"
+        return f"{top_line}\n{bottom_line}"
     
     def house_to_emoji(self, num: int):
         emoji_list = ["🔵","1️⃣","2️⃣","3️⃣","4️⃣","5️⃣","6️⃣","7️⃣","8️⃣","9️⃣","🔟"]

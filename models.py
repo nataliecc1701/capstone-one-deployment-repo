@@ -58,7 +58,7 @@ class MancalaMove(Base):
     player: Mapped[bool] = mapped_column(Boolean(), nullable=False, default=False)
     # TRUE if the move was made by the challenger, FALSE if made by the challenged
     
-    house: Mapped[int] = (Integer())
+    house: Mapped[int] = mapped_column(Integer())
     
     timestamp: Mapped[DateTime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     

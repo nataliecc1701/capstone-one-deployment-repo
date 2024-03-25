@@ -6,7 +6,7 @@ import os
 # library imports
 import discord
 from discord.ext import commands
-from sqlalchemy import select
+from sqlalchemy import select, or_
 from sqlalchemy.orm import Session
 
 # local imports
@@ -36,19 +36,16 @@ async def on_message(message):
     if message.content.startswith("$challenge") and len(message.mentions) == 1:
         await challenge(message.author, message.mentions[0], message.channel)
     elif message.content.startswith("$showboard"):
-        if message.author.name in selected_game:
-            await message.channel.send(selected_game[message.author.name])
-        else:
-            game = get_next_game(message.author.name)
-            if game:
-                selected_game[message.author.name] = game
-                await message.channel.send(game)
-            else:
-                await message.channel.send("There are no games waiting for you to move")
+        await show_board(message)
     elif message.content.startswith("$move"):
         if message.author.name not in selected_game:
+            await message.channel.send("No game to move!")
             return
         game = selected_game[message.author.name]
+        if len(message.content.split()) == 0:
+            await message.channel.send("""syntax: $move [house number]
+                                       house number starts at 1 and increases left to right""")
+            return
         if message.content.split()[1].isdigit:
             house = int(message.content.split()[1])
             err = game.invalidate_move(house-1)
@@ -56,7 +53,13 @@ async def on_message(message):
                 await message.channel.send(err)
             else:
                 with Session(engine) as session:
-                    mv = MancalaMove(match_id = game.id, move_number = len(game.moves), player = game.turn, house = house)
+                    mv = MancalaMove(match_id = game.id, move_number = game.move_count, player = game.turn, house = house)
+                    query = (select(Match)
+                                 .where(Match.id == game.id))
+                    db_game = session.scalars(query).one()
+                    turn_int = 1
+                    if game.turn:
+                        turn_int = 0
                     
                     session.add(mv)
                     try:
@@ -66,17 +69,96 @@ async def on_message(message):
                     status = game.move(house)
                     if status[0] >= 20:
                         await message.channel.send(status[1])
+                    if status[0] == 10:
+                        await message.channel.send("Move made, awaiting move by opposing player")
+                        db_game.status_code = 11 + turn_int
                     if status[0] == 11:
                         await message.channel.send(game)
-                    if status[0] == 10 or status[0] == 12:
-                        await message.channel.send("Move made, awaiting move by opposing player")
-                        await message.channel.send("Next game:")
-                        await message.channel.send(advance_game(message.author.username))
+                    if status[0] == 12:
+                        await message.channel.send("Game finished!")
+                        lead = game.tally_lead()
+                        if game.is_solitaire():
+                            winner = "Challenged"
+                            if lead == 0:
+                                winner = "Challenger"
+                            await message.channel.send(f"{winner} won!")
+                        else:
+                            if lead == turn_int:
+                                await message.channel.send(f"You beat @{game.get_opponent()}!")
+                            else:
+                                await message.channel.send(f"@{game.get_opponent()} won!")
+                        db_game.status_code = 21 + lead
+                    session.add(db_game)
+                    session.commit()
+                    
+                    if status[0] < 20 and status[0] != 11:
+                        selected_game[message.author.name] = None
+                        advance_game(message.author.name)
+                        if message.author.name in selected_game:
+                            await message.channel.send("Next game:")
+                        await show_board(message)
+                    
+        else:
+            await message.channel.send("need a house number to move")
     elif message.content.startswith("$listgames"):
-        await message.channel.send("Your current games are:")
+        with Session(engine) as session:
+            games = (select(Match)
+                     .filter(or_(Match.challenged == message.author.name, Match.challenger == message.author.name))
+                     .filter(Match.status_code < 20)
+                     .order_by(Match.move_time.desc()))
+            games_list = session.scalars(games).all()
+            
+            if not games_list:
+                await message.channel.send("You have no active games")
+            
+            ready_list = []
+            waiting_list = []
+            for game in games_list:
+                if game.challenged == game.challenger:
+                    ready_list.append(f"Solitaire")
+                elif game.challenged == message.author.name:
+                    s = f"{game.challenger}"
+                    if game.status_code in (10, 12):
+                        ready_list.append(s)
+                    else:
+                        waiting_list.append(s)
+                elif game.challenger == message.author.name:
+                    s = f"{game.challenged}"
+                    if game.status_code == 11:
+                        ready_list.append(s)
+                    else:
+                        waiting_list.append(s)
+            sendlist = []
+            if ready_list:
+                sendlist.append(f"Awaiting your move vs. {', '.join(ready_list)}")
+            if waiting_list:
+                sendlist.append(f"Awaiting opponents' moves vs. {', '.join(waiting_list)}")
+            await message.channel.send("\n".join(sendlist))
     elif message.content.startswith("switchgame"):
-        new_game = None # implement this
-        selected_game[message.author.name] = new_game
+        if len(message.content.split()) == 0:
+            await message.channel.send("""syntax: $switchgame [opponent]
+                                       opponent should be entered as it appears on $listgames command""")
+            return
+        opponent = message.content.split()[1]
+        if opponent.lower() == "solitaire":
+            opponent = message.author.name
+        
+        with Session(engine) as session:
+            q = (select(Match)
+                 .filter(or_
+                         ((Match.challenged == message.author.name)&(Match.challenger == opponent),
+                          (Match.challenged == opponent)&(Match.challenger == message.author.name)))
+                 .filter(Match.status_code < 20)
+                 .order_by(Match.move_time.desc()))
+            
+            game = session.scalars(q).first()
+            
+            if not game:
+                await message.channel.send("No game vs that opponent")
+            else:
+                new_game = make_board(game)
+            selected_game[message.author.name] = new_game
+            show_board(message)
 
 
 async def challenge(challenger, challenged, channel):
@@ -87,6 +169,18 @@ async def challenge(challenger, challenged, channel):
         return
     
     with Session(engine) as session:
+        q = (select(Match)
+             .filter(or_
+                     ((Match.challenged == challenged.name)&(Match.challenger == challenger.name),
+                      (Match.challenged == challenger.name)&(Match.challenger == challenged.name)))
+             .filter(Match.status_code < 20)
+             .order_by(Match.move_time.desc()))
+        
+        existing = session.scalars(q).first()
+        if existing:
+            await channel.send("You cannot issue a second challenge against the same opponent while a game is active")
+            return
+        
         mtch = Match(challenger = challenger.name, challenged=challenged.name)
         
         session.add(mtch)
@@ -119,22 +213,43 @@ def get_next_game(username):
         if chald:
             if chalr:
                 if chalr.move_time > chald.move_time:
-                    return MancalaBoard(id = chalr.id, moves = chalr.moves)
-                return MancalaBoard(id = chald.id, moves = chald.moves)
-            return MancalaBoard(id = chald.id, moves = chald.moves)
+                    return make_board(chalr)
+                return make_board(chald)
+            return make_board(chald)
         if chalr:
-            return MancalaBoard(id = chalr.id, moves = chalr.moves)
+            return make_board(chalr)
         return None
 
+def make_board(game):
+    """Constructs a board from a database entry"""
+    return MancalaBoard (id = game.id, moves = game.moves, challenger=game.challenger, challenged=game.challenged)
+
 def advance_game(username):
-    """Sets the user's selected game to their next game, or none if there are no games awaiting them.
-    Returns a string that can be said as a reply by the bot"""
+    """Sets the user's selected game to their next game, or none if there are no games awaiting them."""
     game = get_next_game(username)
     if game:
         selected_game[username] = game
-        return str(game)
+
+async def show_board(message):
+    """Shows the user's current board"""
+    game = None
+    if message.author.name in selected_game:
+        game = selected_game[message.author.name]
     else:
-        return "There are no games waiting for you to move"
-    
+        advance_game(message.author.name)
+        if message.author.name in selected_game:
+            game = selected_game[message.author.name]
+        else:
+            await message.channel.send("There are no games waiting for you to move")
+    if game:
+        if game.is_solitaire():
+            current = "Challenged"
+            if game.turn:
+                current = "Challenger"
+            await message.channel.send(f"Solitaire ({current} side)")
+        else:
+            opponent = game.get_opponent()
+            await message.channel.send(f"vs {opponent}")
+        await message.channel.send(game)
 
 client.run(os.environ['DISCORD_BOT_TOKEN'])
