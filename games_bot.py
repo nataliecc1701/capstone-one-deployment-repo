@@ -57,9 +57,6 @@ async def on_message(message):
                     query = (select(Match)
                                  .where(Match.id == game.id))
                     db_game = session.scalars(query).one()
-                    turn_int = 1
-                    if game.turn:
-                        turn_int = 0
                     
                     session.add(mv)
                     try:
@@ -68,10 +65,11 @@ async def on_message(message):
                         await message.channel.send("error committing move to database")
                     status = game.move(house)
                     if status[0] >= 20:
+                        # should separate this; this happens after the db commit and also we've spun move validation out
                         await message.channel.send(status[1])
                     if status[0] == 10:
                         await message.channel.send("Move made, awaiting move by opposing player")
-                        db_game.status_code = 11 + turn_int
+                        db_game.status_code = 11 + game.turn_int()
                     if status[0] == 11:
                         await message.channel.send(game)
                     if status[0] == 12:
@@ -83,7 +81,7 @@ async def on_message(message):
                                 winner = "Challenger"
                             await message.channel.send(f"{winner} won!")
                         else:
-                            if lead == turn_int:
+                            if lead == game.turn_int():
                                 await message.channel.send(f"You beat @{game.get_opponent()}!")
                             else:
                                 await message.channel.send(f"@{game.get_opponent()} won!")
@@ -92,7 +90,7 @@ async def on_message(message):
                     session.commit()
                     
                     if status[0] < 20 and status[0] != 11:
-                        selected_game[message.author.name] = None
+                        del selected_game[message.author.name]
                         advance_game(message.author.name)
                         if message.author.name in selected_game:
                             await message.channel.send("Next game:")
@@ -134,7 +132,7 @@ async def on_message(message):
             if waiting_list:
                 sendlist.append(f"Awaiting opponents' moves vs. {', '.join(waiting_list)}")
             await message.channel.send("\n".join(sendlist))
-    elif message.content.startswith("switchgame"):
+    elif message.content.startswith("$switchgame"):
         if len(message.content.split()) == 0:
             await message.channel.send("""syntax: $switchgame [opponent]
                                        opponent should be entered as it appears on $listgames command""")
@@ -158,7 +156,10 @@ async def on_message(message):
             else:
                 new_game = make_board(game)
             selected_game[message.author.name] = new_game
-            show_board(message)
+            await show_board(message)
+    elif message.content.startswith("$repr"):
+        if message.author.name in selected_game:
+            await message.channel.send(selected_game[message.author.name].__repr__())
 
 
 async def challenge(challenger, challenged, channel):

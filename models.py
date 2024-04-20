@@ -10,7 +10,7 @@ from sqlalchemy import ForeignKey, String, DateTime, Boolean, Integer, create_en
 from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column, relationship
 from sqlalchemy.sql import func
 
-engine = create_engine(os.environ["GAMES_BOT_DATABASE"], echo=True)
+engine = create_engine(os.environ["GAMES_BOT_DATABASE"], echo=False)
 
 class Base(DeclarativeBase):
     pass

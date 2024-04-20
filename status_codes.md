@@ -19,5 +19,9 @@ These codes are stored in the database, to distinguish active from inactive matc
 These codes are used internally by the mancala logic to determine the outcome of specific moves
 
 ### 1x series: Success
+- 10: Successful move, end turn
+- 11: Successful move, same player's move
+- 12: Successful move: end game
 
 ### 2x series: Error
+- 20: General error

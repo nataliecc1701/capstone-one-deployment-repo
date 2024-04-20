@@ -6,7 +6,7 @@ BOARD_HOUSES = 6
 SEEDS_PER_HOUSE = 4
 
 class MancalaBoard:
-    def __init__(self, id = None, sides = [], scores = [], moves = [], challenger = "", challenged = "", move_count = 0):
+    def __init__(self, id = None, sides = [], scores = [], moves = [], challenger = "", challenged = "", move_count = 0, turn = False):
         self.id = id
         self.challenger = challenger
         self.challenged = challenged
@@ -16,6 +16,7 @@ class MancalaBoard:
             if scores:
                 self.scores = scores
             self.move_count = move_count
+            self.turn = turn
         elif moves:
             # Construct a board from a list of past moves. Only happens if the board state is not given
             for move in moves:
@@ -41,8 +42,8 @@ class MancalaBoard:
         return side
     
     def invalidate_move(self, position, turn = None):
-        """Checks if a move can be made: the position is.
-        Returns a tuple of status code, error string (error string is empty for valid moves)"""
+        """Checks if a move can be made: takes position as an array index.
+        Returns an error string, or false for valid moves"""
         
         if turn == None:
             turn = self.turn
@@ -59,6 +60,8 @@ class MancalaBoard:
     
     def move(self, house, turn = None):
         """Makes a move from the given house. Defaults to being for the player whose turn it is
+        
+        Returns a tuple of status code, string. String is usually empty for successful moves.
         
         Status codes:
         Starting with 1: Successful move
@@ -114,7 +117,6 @@ class MancalaBoard:
             return (10, "")
         else:
             return (11, "")
-                
     
     def is_solitaire(self):
         return self.challenger == self.challenged
@@ -124,11 +126,16 @@ class MancalaBoard:
         if turn == None:
             turn = self.turn
         
+        if turn:
+            return self.challenged
         else:
-            if turn:
-                return self.challenged
-            else:
-                return self.challenger
+            return self.challenger
+    
+    def turn_int(self):
+        """returns 0 for the challenger's turn, 1 for the challenged's turn. Used to construct status codes"""
+        if self.turn:
+            return 0
+        return 1
             
     def tally_lead(self):
         """Tallies the scores and all seeds in people's houses to determine who's ahead. Returns 0 for the challenger and 1 for the challenged.
@@ -139,7 +146,7 @@ class MancalaBoard:
         return 1
     
     def __repr__(self):
-        return f"MancalaBoard(id={self.id}, sides={self.sides}, scores={self.score}, challenger={self.challenger}, challenged={self.challenged}, move_count={self.move_count})"
+        return f"MancalaBoard(id={self.id}, sides={self.sides}, scores={self.scores}, challenger={self.challenger}, challenged={self.challenged}, move_count={self.move_count}, turn={self.turn})"
     
     def __str__(self):
         '''the emojified string of the board'''
