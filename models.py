@@ -10,8 +10,6 @@ from sqlalchemy import ForeignKey, String, DateTime, Boolean, Integer, create_en
 from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column, relationship
 from sqlalchemy.sql import func
 
-engine = create_engine(os.environ["GAMES_BOT_DATABASE"], echo=False)
-
 class Base(DeclarativeBase):
     pass
 
@@ -63,3 +61,5 @@ class MancalaMove(Base):
     timestamp: Mapped[DateTime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     
     game: Mapped["Match"] = relationship(back_populates="moves")
+
+engine = create_engine(os.environ["GAMES_BOT_DATABASE"], echo=True)
