@@ -131,7 +131,8 @@ async def on_message(message):
                 sendlist.append(f"Awaiting your move vs. {', '.join(ready_list)}")
             if waiting_list:
                 sendlist.append(f"Awaiting opponents' moves vs. {', '.join(waiting_list)}")
-            await message.channel.send("\n".join(sendlist))
+            if sendlist:
+                await message.channel.send("\n".join(sendlist))
     elif message.content.startswith("$switchgame"):
         if len(message.content.split()) == 0:
             await message.channel.send("""syntax: $switchgame [opponent]
