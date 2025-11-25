@@ -1,56 +1,84 @@
-# Capstone Project One
+# Readme
 
-We have broken down the Capstone Project into easy-to-follow steps. Each step of the capstone contains a link with instructions for that step. Here’s a quick overview of what you’ll do for each step of your capstone project:
+This project is a discord bot that hosts mancala games, displaying a board made out of emoji in response to user commands.
 
-1. Step One: Initial Project Ideas: You’ll pick up to 3 project ideas to propose to your mentor and the Springboard community. You’ll also explore some potential APIs.
-2. Step Two: Project Proposal: For this step, you’ll write a proposal for the site you want to build. This will help your mentor better understand your chosen capstone project idea.
-3. Step Three: Schema Design and API Selection: After your mentor approves of your capstone project proposal, you’ll figure out the database design of your application and which API you’ll be using.
-4. Step Four: Coding User Flows: Once you’ve figured out what you’re building, you’ll write the code to implement it. It’s important to think about what you want a user’s experience to be like as they navigate your site.
-5. Step Five: Polishing Your Application: Once you have the core functionality implemented, you’ll focus on additional UI enhancements and styling for your application.
-6. Step Six: Documenting and Submission: You’ve done a lot of work so now it’s time to show your mentor your progress! Create a README in markdown, make sure your GitHub is organized, and submit your finalized project.
+## Using the Bot
 
-## Overview
+### Installation
 
-For your first Capstone Project, you’ll build a database-driven website off an external
-API of your choice. Your finished capstone will be an integral part of your portfolio; it will demonstrate to potential employers everything you’ve learned from this course.
+The existing bot can be added to a server by going to the URL https://discord.com/oauth2/authorize?client_id=1203620521808498709 and selecting the server there or in the Discord app for any server you have authorization to add bots to.
 
-We want you to work on a challenging project that will incorporate all of the back-end
-skills you’ve been developing and some of your front-end skills from the last section.
-The goal of this project isn’t to create something that’s never been done before. You
-could potentially create a website similar to one that already exists, or use a popular
-API. That being said, we do encourage you to be creative when building your site. You’re free to choose any API you’d like to use and we encourage you to tap into your
-imagination throughout the project.
+### Board Display
 
-There is a term in software development called CRUD - Create, Read, Update, Delete. This refers to all of the basic operations that a relational database performs. Your website should have more functionality than simple CRUD.
+The board display will look something like this:
 
-## Examples
+1️⃣⬛🔵🔵1️⃣🔵🔵🔵⬛2️⃣
+8️⃣⬛2️⃣🔵🔵1️⃣4️⃣2️⃣⬛0️⃣
 
-There are thousands of free, publically available APIs. If you love cars, you can pick
-from dozens of automotive APIs to build something that will reflect your passion. If you’re more into history, look into an API that lists the nobility of Europe. If you love sports, build a site about India’s top cricketers or your local football league.
+The leftmost column indicates the score of the opposing player (tens place on top, ones place on the bottom). The rightmost column indicates the score of the currrently active player in the same fashion.
 
-Let’s give you an example of what a site could look like. Say you choose an API like The
-Movie Database, your site could have a landing page saying “Welcome To MyMovieDB” and a separate page that displays a sortable list of all the movies in the API. This would be CRUD.
+The black square emoji are spacers separating the scoreboard from the game board itself.
 
-You could implement various filtering methods - to filter based on an actor, a director,
-the year the movie was released, etc. When you click on the record associated with the movie, you could redirect a user to a separate page that displays all of the data
-associated with that movie.
+The middle section shows the game board. The top row are the houses on your opponent's side. The bottom row are the houses on your side. Circles indicate empty houses, while numbers indicate the number of seeds in that house
 
-Now let’s talk about bells and whistles. If you were to implement ONE feature like
-creating sharable lists of your favorite movies, finding and playing a trailer for the movie on-page, or a simple “recommendation system” that would recommend new movies based on similarities to movies you liked, this would go beyond CRUD. A simple
-“recommendation system” would be along the lines of, if you like Big Daddy with Adam
-Sandler, recommending other Adam Sandler comedies from the 90s or recommending
-movies his co-stars like Steve Buscemi starred in. This does not mean creating a
-complicated system from scratch like Netflix.
+#### popcorn emoji
 
-It is better to pick a project that errs on the side of simple and boring than a complex
-project with a million moving parts you can get stuck in.
+The popcorn emoji is used to indicate a house that has more than ten seeds. Allocating a single digit per house does not allow for a more precise display of a large house.
 
-[Here is an example of a previous project.](https://github.com/juliahazer/chart-my-team)
+### Commands
 
-## Guidelines
+Bot commands are prefixed with a $
 
-1. You will use the following technologies in this project: Python/Flask, PostgreSQL, SQLAlchemy, Heroku, Jinja, RESTful APIs, JavaScript, HTML, CSS. Depending on your idea, you might end up using WTForms and other technologies discussed in the course.
-2. Every step of the project has submissions. This will alert your mentor to evaluate your work. Pay attention to the instructions so you submit the right thing. You will submit the link to your GitHub repo several times, this is for your mentor’s convenience. Your URL on GitHub is static and will not change.
-3. The first two steps require mentor approval to proceed, but after that, you are free to continue working on the project after you submit your work. For instance, you don’t need your mentor to approve your database schema before you start working on your site. Likewise, you don’t need your mentor to approve the first iteration of your site before you start polishing it.
-4. If you get stuck, there is a wealth of resources at your disposal. The course contains all of the material you will need to complete this project, but a well-phrased Google search might yield you an immediate solution to your problem. Don’t forget that your Slack community, TAs, and your mentor there to help you out.
-5. Make sure you use a free API and deploy your project on Heroku , so everyone can see your work!
+#### $challenge @\[user\]
+
+Begins a game between you and the user mentioned. They must play the first move to accept the challenge. You may challenge yourself.
+
+#### $listgames
+
+Lists all games you are currently involved in
+
+#### $showboard
+
+Shows the board for your selected game, i.e., the one $move commands will apply to. It is advised to use this rather than firing off move commands without checking which board is selected first
+
+#### $switchgame \[opponent\]
+
+Selects the game (for $showboard and $move commands) to be whatever you are playing against the named opponent. If you don't have a game against that opponent, does nothing.
+
+Note that this is _not_ a mention as in $challenge. Instead, the opponent should be referred to as the bot does in $listgames.
+
+#### move \[number\]
+
+takes a number between one and six and makes a move from that house (numbers run left to right) in the currently selected game, then, if you are not entitled to take another move immediately after, changes the currently selected game to whatever game most recently became your turn and shows you the board from that.
+
+#### repr
+
+Causes the bot to spit out some debug information about the current selected game (as for $showboard and $move)
+
+### Game rules
+
+The bot implements the rules of a simple 6,4 mancala game. These parameters (the number of houses on a side and the number of starting seeds per house) can be changed in mancala_logic.py
+
+#### The board
+
+The board is made up of two scoring cups, at the ends of the board (the scoring cup to your right is yours, the one to your left belongs to your opponent) and six houses on each side of the board (six for you, six for your opponent). In each house and scoring cup there are a number of seeds, which are the primary game piece and will change throughout the game.
+
+"Left" and "Right" are defined on the assumption that the players are facing each other with the board in between them. The display from this bot is done on that basis, as though you are sitting at the bottom of the screen, looking up at an opponent above you (which means that left and right match what is displayed on screen)
+
+#### Moving
+
+On your turn, you must make a move. To do so, select a non-empty house from your side of the board. Remove all its seeds, then, moving to the right, place one in the next house, one in the next, and so on. When you get to the end, place a seed in your scoring cup; if you have seeds remaining, place them right to left into your opponent's houses. If you have seeds remaining after that, do not place one in the scoring cup, instead place them left to right into your houses, and so on.
+
+#### Repeat turns
+
+If the last seed you place on a turn goes into your scoring cup, you may take another turn immediately. Otherwise, play passes to your opponent
+
+#### Capturing
+
+If the last seed you place on a turn goes into an empty house on your side, and the corresponding house on your opponent's side has seeds in it, take the seeds from your opponent's house and add them to your score.
+
+Note that houses correspond to the same position, though their numerical arrangements run opposite. For instance, the leftmost (first) house on your side of the board corresponds to the rightmost house on your opponent's side, 
+
+#### Ending the game
+
+When one side has no seeds in its houses, the game is over. Move all seeds on the other side into that side's scoring cup; whichever side has more seeds is the winner.
