@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+
+{% block title %} Mancala Games Bot for Discord {% endblock %}
+{% block heading %}Mancala Bot{% endblock %}
+
+{% block content %}
+<p>The Mancala Bot is a games bot that lets you and your friends challenge each other to games of Mancala, played over discord.</p>
+<p>The bot stores and displays the state of the game board, and can even handle a player being involved in multiple simultaneous games and solitaire games played against themself</p>
+<p>The games a player is in are stored in the bot's database keyed to the player's username, and so can be viewed and played from any server to which the bot has been added.
+    Challenging someone is intuitive, and requires that both players be in the same server (with the bot), and involves the challenger @mentioning their opponent.
+</p>
+<p>Because this system works entirely through discord, authentication is handled securely by discord. The bot knows who you are by your discord account</p>
+{% endblock %}

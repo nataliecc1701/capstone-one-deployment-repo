@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block title %} Commands - Mancala Games Bot for Discord {% endblock %}
+{% block heading %}Mancala Bot: Commands{% endblock %}
+
+{% block content %}
+<p>The Mancala Bot is controlled through a number of commands. These are as follows</p>
+<ul>
+    <li><strong>$challenge @[user]</strong>:
+        Begins a game between you and the user mentioned. They must play the first move to accept the challenge. You may challenge yourself.</li>
+    <li><strong>$listgames</strong>:
+        Lists all games you are currently involved in.
+        Sorts them by games which are awaiting your next move (including solitaire games) and games awaiting your opponent's next move, and identifies your opponent</li>
+    <li><strong>$showboard</strong>:
+        Shows the board for your selected game, i.e., the one $move commands will apply to.
+        It is advised to use this rather than firing off $move commands without checking which board is selected first</li>
+    <li><strong>$switchgame [opponent]</strong>: 
+        Switches your currently active game to be one you are playing against the named opponent, if one exists.
+        Note: this is <em>not</em> an @mention, unlike $challenge. Simply use the name for your opponent the bot uses in the $listgames command</li>
+    <li><strong>move [number]</strong>:
+        Takes a number 1-6 and moves the seeds in that house on your side of the currently-active board.
+        House numbers increase left to right (i.e. the leftmost house is 1 and the rightmost house is 6).
+        If your move does not entitle you to take another after it, your currently-active game automatically changes to the one where it most recently became your turn</li>
+    <li><strong>repr</strong>:
+        Causes the bot to spit out some debug information about the current selected game (as for $showboard and $move)</li>
+</ul>
+
+<h2>Mancala Rules</h2>
+<p>The bot implements the rules of a simple 6,4 mancala game, as follows:</p>
+
+<h3>The Board</h3>
+<p>The board is made up of two scoring cups, at the ends of the board (the scoring cup to your right is yours, the one to your left belongs to your opponent) and six houses on each side of the board (six for you, six for your opponent). In each house and scoring cup there are a number of seeds, which are the primary game piece and will change throughout the game.
+</p>
+
+<p>"Left" and "Right" are defined on the assumption that the players are facing each other with the board in between them. The display from this bot is done on that basis, as though you are sitting at the bottom of the screen, looking up at an opponent above you (which means that left and right match what is displayed on screen)
+</p>
+
+<p>for more information about how this is shown to the player, see The Board Display, below</p>
+
+<h3>Moving</h3>
+<p>On your turn, you must make a move. To do so, select a non-empty house from your side of the board.
+    Remove all its seeds, then, moving to the right, place one in the next house, one in the next, and so on. When you get to the end, place a seed in your scoring cup;
+    if you have seeds remaining, place them right to left into your opponent's houses.
+    If you have seeds remaining after that, do not place one in the scoring cup, instead place them left to right into your houses, and so on.
+</p>
+
+<h3>Repeat Turns</h3>
+<p>If the last seed you place on a turn goes into your scoring cup, you may take another turn immediately. Otherwise, play passes to your opponent
+</p>
+
+<h3>Capturing</h3>
+<p>If the last seed you place on a turn goes into an empty house on your side, and the corresponding house on your opponent's side has seeds in it, take the seeds from your opponent's house and add them to your score.
+</p>
+
+<p>Note that houses correspond to the same position, vertically adjacent to it on the board, though their numbers run opposite.
+    For instance, the leftmost (first) house on your side of the board corresponds to the rightmost house (sixth) on your opponent's side.
+    On the board display, those two houses will be shown with the opponent's corresponding house directly above the house of yours two which it corresponds</p>
+
+<h3>Ending the Game</h3>
+<p>When one side has no seeds in its houses, the game is over. Move all seeds on the other side into that side's scoring cup; whichever side has more seeds is the winner.</p>
+
+<h2>The Board Display</h2>
+<p>The board display will look something like this:</p>
+
+<p>
+1️⃣⬛🔵🔵1️⃣🔵🔵🔵⬛2️⃣
+8️⃣⬛2️⃣🔵🔵1️⃣4️⃣2️⃣⬛0️⃣
+</p>
+
+<p>The leftmost column indicates the score of the opposing player (tens place on top, ones place on the bottom).
+The rightmost column indicates the score of the currrently active player in the same fashion.
+In the counterclockwise way that seeds are sown in this mancala game, the scoreboards are located where the players' goals are.</p>
+
+<p>The black square emoji are spacers separating the scoreboard from the game board itself.</p>
+
+<p>The middle section shows the game board. The top row are the houses on your opponent's side. The bottom row are the houses on your side.
+Circles indicate empty houses, while numbers indicate the number of seeds in that house</p>
+
+<p>Houses with an excess of seeds may instead show the popcorn emoji 🍿, to indicate that they are very full.
+Unfortunately, the one-emoji-per-house constraint limits the amount of detail that can be shown for an overfull house.</p>
+
+{% endblock %}

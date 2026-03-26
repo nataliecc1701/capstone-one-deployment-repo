@@ -15,7 +15,7 @@ The board display will look something like this:
 1️⃣⬛🔵🔵1️⃣🔵🔵🔵⬛2️⃣
 8️⃣⬛2️⃣🔵🔵1️⃣4️⃣2️⃣⬛0️⃣
 
-The leftmost column indicates the score of the opposing player (tens place on top, ones place on the bottom). The rightmost column indicates the score of the currrently active player in the same fashion.
+The leftmost column indicates the score of the opposing player (tens place on top, ones place on the bottom). The rightmost column indicates the score of the currrently active player in the same fashion. In the counterclockwise way that seeds are sown in this mancala game, the scoreboards are located where the players' goals are.
 
 The black square emoji are spacers separating the scoreboard from the game board itself.
 
