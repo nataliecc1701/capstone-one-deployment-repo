@@ -1,0 +1,22 @@
+body {
+    background-color: darkslategray;
+    color:ghostwhite;
+    font-size: 150%;
+}
+
+nav {
+    background-color: slateblue;
+}
+
+a {
+    color: ghostwhite;
+}
+
+a:visited {
+    color:lightblue;
+}
+
+.content {
+    margin: auto;
+    width: 80%;
+}

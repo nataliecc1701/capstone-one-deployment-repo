@@ -2,10 +2,23 @@
 <html>
 <head>
     <title>{% block title %} Mancala Games Bot {% endblock %}</title>
+    <link rel="stylesheet" href="/static/mancalabot.css">
 </head>
 
 <body>
-    <h1>{% block heading %}{% endblock %}</h1>
-    {% block content %} Unfilled content block. If this is displayed to end user, something has gone wrong {% endblock %}
+    <nav>
+        <ul>
+            {% for page in pages %}
+            <li>{% if page[0] == current_page %}
+                <strong>{{page[1]}}</strong>
+                {% else %}
+                <a href="{{page[0]}}">{{page[1]}}</a>
+                {% endif %}
+            </li>
+            {% endfor %}
+        </ul>
+    </nav>
+    <div class="content"><h1>{% block heading %}{% endblock %}</h1>
+    {% block content %} Unfilled content block. If this is displayed to end user, something has gone wrong {% endblock %}</div>
 </body>
 </html>
