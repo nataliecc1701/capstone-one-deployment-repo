@@ -3,7 +3,7 @@ from flask import Flask, render_template
 app = Flask(__name__)
 
 PAGES = [
-    ["/", "Main"],
+    ["/", "Main Page"],
     ["/add_bot", "Add the bot to your server"],
     ["/commands", "Bot Commands and game rules"]
 ]

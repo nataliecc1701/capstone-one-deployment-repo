@@ -8,6 +8,11 @@ nav {
     background-color: slateblue;
 }
 
+nav li {
+    display: inline;
+    margin: 2.5%;
+}
+
 a {
     color: ghostwhite;
 }
