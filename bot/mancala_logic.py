@@ -35,7 +35,12 @@ class MancalaBoard:
         # optimized. I could do this with dictionaries (keys "challenger", "challenged")
         # and the turn being a key
         
-    def construct_side(self, houses,seeds):
+    def construct_side(self, houses, seeds):
+        """Constructs a board side as an array. The array's length will equal houses
+        and each value will equal seeds
+        >>> construct_side(self, 6, 4)
+        [4,4,4,4,4,4]
+        """
         side = []
         for i in range(houses):
             side.append(seeds)
@@ -146,7 +151,7 @@ class MancalaBoard:
         return 1
     
     def __repr__(self):
-        return f"MancalaBoard(id={self.id}, sides={self.sides}, scores={self.scores}, challenger={self.challenger}, challenged={self.challenged}, move_count={self.move_count}, turn={self.turn})"
+        return f"MancalaBoard(id={self.id}, sides={self.sides}, scores={self.scores}, challenger='{self.challenger}', challenged='{self.challenged}', move_count={self.move_count}, turn={self.turn})"
     
     def __str__(self):
         '''the emojified string of the board'''
