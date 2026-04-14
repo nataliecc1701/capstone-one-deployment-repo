@@ -65,7 +65,7 @@ class NewGameTestCase(MancalaLogicTestCase):
         
         self.board.new_game(6, 4) # calling new_game with parameters set so that the test case doesn't test or import the constants from the file being tested
         
-        self.assertTrue(isinstance(self.board.sides), list)
+        self.assertTrue(isinstance(self.board.sides, list))
         self.assertEqual(len(self.board.sides), 2)
         for side in self.board.sides:
             self.assertTrue(isinstance(side, list))
@@ -73,7 +73,7 @@ class NewGameTestCase(MancalaLogicTestCase):
             for val in side:
                 self.assertEqual(val, 4)
         
-        self.assertTrue(isinstance(self.board_scores), list)
+        self.assertTrue(isinstance(self.board.scores, list))
         self.assertEqual(len(self.board.scores), 2)
         for score in self.board.scores:
             self.assertEqual(score, 0)
@@ -89,7 +89,7 @@ class InitTestCase(MancalaLogicTestCase):
         """tests the default init parameters"""
         # using the board made in setup directly and testing if new_game was called
         
-        self.assertTrue(isinstance(self.board.sides), list)
+        self.assertTrue(isinstance(self.board.sides, list))
         
         # we're not testing the constants, so instead we test that the sides are the same length
         # and that all houses have the same number of seeds
@@ -100,7 +100,7 @@ class InitTestCase(MancalaLogicTestCase):
             for val in side:
                 self.assertEqual(val, self.board.sides[0][0])
         
-        self.assertTrue(isinstance(self.board_scores), list)
+        self.assertTrue(isinstance(self.board.scores, list))
         self.assertEqual(len(self.board.scores), 2)
         for score in self.board.scores:
             self.assertEqual(score, 0)
@@ -166,59 +166,198 @@ class TestInvalidateMove(MancalaLogicTestCase):
     def test_valid_move(self):
         """tests a valid move"""
         
+        # we can run this test on the board as it is given to us by initialization
+        move = self.board.invalidate_move(2)
+        
+        self.assertFalse(move)
+        
+        
     def test_empty_house(self):
         """tests an attempt to sow from an empty house"""
+        
+        # empty a house
+        # we empty one on the challenged side because it is their turn
+        self.board.sides[1][0] = 0
+        
+        move = self.board.invalidate_move(0)
+        
+        self.assertEqual(move, "Cannot take from empty house")
         
     def test_nonexistent_house(self):
         """tests an attempt to sow from beyond the length of the board"""
         
+        move = self.board.invalidate_move(999)
+        
+        self.assertEqual(move, "House does not exist")
+        
 class TestMove(MancalaLogicTestCase):
     def test_valid_move(self):
         """tests a valid move and sees if it changes the board"""
+        # test that the board is as expected when initialized
+        self.assertEqual(self.board.sides[1][0], 4)
+        
+        move_status = self.board.move(1)
+        
+        self.assertEqual(self.board.sides[1][0], 0)
+        self.assertEqual(self.board.sides[1][1], 5)
+        self.assertEqual(self.board.sides[1][5], 4)
+        
+        self.assertEqual(move_status, (10, ""))
         
     def test_mismatched_turn(self):
         """tests a move made by the player whose turn is not the turn the board thinks it is"""
+        # test that the board is as expected when initialized
+        self.assertEqual(self.board.sides[0][0], 4)
+        
+        move_status = self.board.move(1, turn=True)
+        
+        self.assertEqual(self.board.sides[0][0], 0)
+        self.assertEqual(self.board.sides[0][1], 5)
+        self.assertEqual(self.board.sides[0][5], 4)
+        
+        self.assertEqual(self.board.sides[1][0], 4) # doesn't move the thing on the wrong side
+        
+        self.assertEqual(move_status, (10, ""))
         
     def test_empty_house(self):
         """tests a move made from an empty house"""
         
+        self.board.sides[1][0] = 0
+        
+        move_status = self.board.move(1)
+        
+        self.assertEqual(move_status, (20, "cannot take from empty house"))
+        self.assertEqual(self.board.sides[1][0], 0)
+        self.assertEqual(self.board.sides[1][1], 4)
+        
     def test_capture(self):
         """tests a move that captures"""
         
+        self.board.sides[1][5] = 0
+        
+        move_status = self.board.move(2)
+        
+        self.assertEqual(self.board.sides[0][0], 0)
+        self.assertEqual(self.board.scores[1], 4)
+        
+        self.assertEqual(move_status, (10, ""))
+        
     def test_win(self):
         """tests a move that wins the game"""
+        new_sides = [[4,0,0,0,0,0],[5,0,3,0,1,0]]
+        
+        self.board.sides = new_sides
+        
+        move_status = self.board.move(5)
+        
+        self.assertEqual(move_status, (12, "Game over!"))
         
     def test_turn_handover(self):
         """tests a move that's supposed to end the player's turn"""
+        current_turn = self.board.turn
+        
+        move_status = self.board.move(1)
+        self.assertEqual(move_status, (10, ""))
+        
+        self.assertFalse(self.board.turn==current_turn)
         
     def test_bonus_turn(self):
         """tests a move that's supposed to result in a bonus turn"""
+        current_turn = self.board.turn
+        
+        move_status = self.board.move(3)
+        self.assertEqual(move_status, (11, ""))
+        
+        self.assertTrue(self.board.turn==current_turn)
         
 class TestMiscFunctions(MancalaLogicTestCase):
     def test_is_solitaire(self):
         """test the is_solitaire function"""
         
+        first = self.board.is_solitaire()
+        
+        self.assertTrue(first)
+        
+        new_board = MancalaBoard(challenger='p1', challenged='p2')
+        
+        second = new_board.is_solitaire()
+        
+        self.assertFalse(second)
+        
     def test_get_opponent(self):
         """test the get_opponent function"""
         
+        new_board = MancalaBoard(challenger='p1', challenged='p2')
+        
+        o1 = new_board.get_opponent()
+        self.assertEqual(o1, 'p1')
+        
+        new_board.turn = True
+        o2 = new_board.get_opponent()
+        self.assertEqual(o2, 'p2')
+        
+        o3 = new_board.get_opponent(False)
+        self.assertEqual(o3, 'p1')
+        
     def test_turn_int(self):
         """test the turn_int function"""
+        t_i = self.board.turn_int()
+        self.assertEqual(t_i, 1)
+        
+        self.board.turn = True
+        t_i2 = self.board.turn_int()
+        self.assertEqual(t_i2, 0)
         
     def test_tally_lead(self):
         """test the tally_lead function"""
         
+        # empty all the houses on one side of the board
+        for house in self.board.sides[0]:
+            house = 0
+        
+        lead = self.board.tally_lead()
+        self.assertEqual(lead, 1)
+        
     def test_house_to_emoji(self):
         """test that the house_to_emoji function returns an emoji"""
+        emj = self.board.house_to_emoji(4)
+        
+        self.assertEqual(emj, "4️⃣")
+        
+        popcorn = self.board.house_to_emoji(999)
+        
+        self.assertEqual(popcorn, "🍿")
         
     def test_score_to_emoji(self):
         """test the score_to_emoji function"""
+        
+        emj = self.board.score_to_emoji(35)
+        
+        self.assertEqual(emj, ["3️⃣","5️⃣"])
+        
+        test_overflow = self.board.score_to_emoji(999)
+        self.assertEqual(test_overflow, ["9️⃣", "9️⃣"])
     
     def test_side_to_string(self):
         """test the side_to_string function"""
+        test_side = [0,1,2,3,4,5]
+        forward = self.board.side_to_string(test_side)
+        self.assertEqual(forward, "🔵1️⃣2️⃣3️⃣4️⃣5️⃣")
+        
+        reverse = self.board.side_to_string(test_side, reverse=True)
+        self.assertEqual(reverse, "5️⃣4️⃣3️⃣2️⃣1️⃣🔵")
+        
         
 class TestStringFunctions(MancalaLogicTestCase):
     def test_str(self):
-        """a few tests for the __str__ function"""
+        """a test for the __str__ function"""
+        s = self.board.__str__()
+        
+        self.assertEqual(s, "0️⃣⬛4️⃣4️⃣4️⃣4️⃣4️⃣4️⃣⬛0️⃣\n0️⃣⬛4️⃣4️⃣4️⃣4️⃣4️⃣4️⃣⬛0️⃣")
         
     def test_repr(self):
-        """a few tests for the __repr__ function"""
+        """a test for the __repr__ function"""
+        
+        s = self.board.__repr__()
+        
+        self.assertEqual(s, "MancalaBoard(id=None, sides=[[4, 4, 4, 4, 4, 4], [4, 4, 4, 4, 4, 4]], scores=[0, 0], challenger='', challenged='', move_count=0, turn=False)")

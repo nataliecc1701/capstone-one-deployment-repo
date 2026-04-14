@@ -64,7 +64,9 @@ class MancalaBoard:
         return False
     
     def move(self, house, turn = None):
-        """Makes a move from the given house. Defaults to being for the player whose turn it is
+        """Makes a move from the given house.
+        Houses are 1-indexed
+        Defaults to being for the player whose turn it is
         
         Returns a tuple of status code, string. String is usually empty for successful moves.
         
@@ -96,14 +98,20 @@ class MancalaBoard:
             return (20, "cannot take from empty house")
         while seeds_in_hand > 0:
             position += 1
-            if position >= BOARD_HOUSES*2 + 1:
-                position = position % 13
             
+            # wrap around
+            if position >= BOARD_HOUSES*2 + 1:
+                position = position % BOARD_HOUSES*2 + 1
+            
+            # sowing
             if position < BOARD_HOUSES:
+                # sow into your side
                 self.sides[side][position] += 1
             elif position == BOARD_HOUSES:
+                # sow into your score
                 self.scores[side] += 1
             else:
+                # sow into your opponent's side
                 self.sides[side-1][position-BOARD_HOUSES-1] += 1
             seeds_in_hand -= 1
         
@@ -144,7 +152,9 @@ class MancalaBoard:
             
     def tally_lead(self):
         """Tallies the scores and all seeds in people's houses to determine who's ahead. Returns 0 for the challenger and 1 for the challenged.
-        If one side of the board is empty, then whoever is ahead now is the winner."""
+        If one side of the board is empty, then whoever is ahead now is the winner.
+        
+        returns that the challenged player won on a tie"""
         final_scores = (self.scores[0] + sum(self.sides[0]), self.scores[1] + sum(self.sides[1]))
         if final_scores[0] > final_scores[1]:
             return 0
@@ -175,6 +185,10 @@ class MancalaBoard:
     
     def score_to_emoji(self, score: int):
         emoji_list = ["0️⃣","1️⃣","2️⃣","3️⃣","4️⃣","5️⃣","6️⃣","7️⃣","8️⃣","9️⃣"]
+        
+        if (score > 99):
+            return ["9️⃣", "9️⃣"]
+        
         places = (score//10, score%10)
         emoji = []
         for digit in places:
